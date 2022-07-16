@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "license_tracker"
+version = "0.1.0"
+description = ""
+
+[tool.poetry.dependencies]
+python = "^3.9"
+typer = {extras = ["all"], version = "^0.6.1"}
+
+[tool.poetry.dev-dependencies]
+pytest = "7.1.2"
+black = "^22.6.0"
+isort = "^5.10.1"
+mypy = "^0.961"
+pre-commit = "^2.20.0"
+coverage = "^6.4.2"
+pytest-cov = "^3.0.0"
+pytest-mypy = "^0.9.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+include_trailing_comma = true
+
+[tool.black]
+line_length = 88
+
+[tool.pytest.ini_options]
+minversion = "7.1.2"
+addopts = "--cov-report term --cov=license_tracker --cov-fail-under=80"
+testpaths = [
+    "tests",
+]

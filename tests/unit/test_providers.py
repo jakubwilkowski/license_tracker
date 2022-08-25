@@ -1,7 +1,9 @@
+from typing import Union
 from unittest.mock import MagicMock, patch
 
 import pytest
 from httpx import HTTPStatusError, Response
+from httpx._types import URLTypes
 
 from license_tracker import exceptions
 from license_tracker.models import Dependency, License
@@ -9,7 +11,7 @@ from license_tracker.providers import GithubClient, PypiClient, httpx
 
 
 @pytest.fixture
-def pypi_real_project_urls() -> dict[str, str]:
+def pypi_real_project_urls() -> dict[str, URLTypes]:
     """
     Example project urls of Django from pypi
     """
@@ -25,7 +27,9 @@ def pypi_real_project_urls() -> dict[str, str]:
 
 
 @pytest.fixture
-def pypi_real_response(pypi_real_project_urls) -> dict[str, dict[str, dict[str, str]]]:
+def pypi_real_response(
+    pypi_real_project_urls: dict[str, URLTypes]
+) -> dict[str, dict[str, dict[str, URLTypes]]]:
     return {"info": {"project_urls": pypi_real_project_urls}}
 
 
@@ -34,14 +38,19 @@ def github_repo_url() -> str:
     return "https://github.com/org/project/"
 
 
+PypiResponseType = dict[str, dict[str, Union[str, dict[str, URLTypes]]]]
+
+
 @pytest.fixture
-def pypi_response() -> dict[str, dict[str, dict[str, str]]]:
+def pypi_response() -> PypiResponseType:
     return {"info": {"project_urls": {"Source": "https://github.com/org/project/"}}}
 
 
 class TestGithubClient:
     @patch.object(httpx, "get")
-    def test__fetch_license_content_returns_text_of_the_license(self, patched_get):
+    def test__fetch_license_content_returns_text_of_the_license(
+        self, patched_get: MagicMock
+    ) -> None:
         mock_response = Response(
             status_code=200, text="Lorem ipsum", request=MagicMock()
         )
@@ -55,8 +64,8 @@ class TestGithubClient:
 
     @patch.object(httpx, "get")
     def test__fetch_license_files_returns_license_files(
-        self, patched_get, github_repo_url, version
-    ):
+        self, patched_get: MagicMock, github_repo_url: str, version: str
+    ) -> None:
         """
         Good examples of multiple license files can be found in django and packaging repo:
         https://github.com/django/django or https://github.com/pypa/packaging/
@@ -92,8 +101,8 @@ class TestGithubClient:
 
     @patch.object(httpx, "get")
     def test__fetch_license_files_raises_on_second_404(
-        self, patched_get, github_repo_url, version
-    ):
+        self, patched_get: MagicMock, github_repo_url: str, version: str
+    ) -> None:
         mock_response = Response(status_code=404, request=MagicMock(), json={})
         patched_get.return_value = mock_response
 
@@ -105,8 +114,12 @@ class TestGithubClient:
     @pytest.mark.parametrize("status_code", [400, 401, 429, 500, 502])
     @patch.object(httpx, "get")
     def test__fetch_license_files_raises_on_most_4xx_5xx(
-        self, patched_get, status_code, github_repo_url, version
-    ):
+        self,
+        patched_get: MagicMock,
+        status_code: int,
+        github_repo_url: str,
+        version: str,
+    ) -> None:
         mock_response = Response(status_code=status_code, request=MagicMock(), json={})
         patched_get.return_value = mock_response
 
@@ -116,8 +129,13 @@ class TestGithubClient:
     @patch.object(GithubClient, "_fetch_license_files")
     @patch.object(GithubClient, "_fetch_license_content")
     def test_get_licenses_returns_expected_license_files(
-        self, mock_fetch_content, mock_fetch_files, github_repo_url, version, license_
-    ):
+        self,
+        mock_fetch_content: MagicMock,
+        mock_fetch_files: MagicMock,
+        github_repo_url: str,
+        version: str,
+        license_: License,
+    ) -> None:
         mock_fetch_files.return_value = [
             {
                 "name": filename,
@@ -154,23 +172,25 @@ class TestGithubClient:
 
     @patch.object(GithubClient, "_fetch_license_files")
     def test_get_licenses_raises_when_there_are_no_licenses(
-        self, mock_fetch_files, github_repo_url, version
-    ):
+        self, mock_fetch_files: MagicMock, github_repo_url: str, version: str
+    ) -> None:
         mock_fetch_files.return_value = []
         with pytest.raises(exceptions.NoLicenseFound):
             GithubClient().get_licenses(project_url=github_repo_url, version=version)
 
     @patch.object(GithubClient, "_fetch_license_files")
     def test_get_licenses_raises_when_there_github_is_not_available(
-        self, mock_fetch_files, github_repo_url, version
-    ):
+        self, mock_fetch_files: MagicMock, github_repo_url: str, version: str
+    ) -> None:
         mock_fetch_files.side_effect = HTTPStatusError(
             "error", request=MagicMock(), response=MagicMock()
         )
         with pytest.raises(exceptions.NoLicenseFound):
             GithubClient().get_licenses(project_url=github_repo_url, version=version)
 
-    def test_get_versioned_project_url(self, github_repo_url, version):
+    def test_get_versioned_project_url(
+        self, github_repo_url: str, version: str
+    ) -> None:
         assert (
             GithubClient().get_versioned_project_url(github_repo_url, version)
             == "https://github.com/org/project/tree/1.2.3"
@@ -178,14 +198,14 @@ class TestGithubClient:
 
 
 class TestPypiClient:
-    def test__build_url_calls_versioned_api_if_possible(self, version):
+    def test__build_url_calls_versioned_api_if_possible(self, version: str) -> None:
         assert f"{PypiClient.HOST}test/json" == PypiClient._build_url("test", None)
         assert f"{PypiClient.HOST}test/{version}/json" == PypiClient._build_url(
             "test", version
         )
 
     @patch.object(httpx, "get")
-    def test__call_calls_given_url(self, patched_get):
+    def test__call_calls_given_url(self, patched_get: MagicMock) -> None:
         mock_response = Response(status_code=200, request=MagicMock())
         patched_get.return_value = mock_response
 
@@ -194,15 +214,17 @@ class TestPypiClient:
         assert result == mock_response
         patched_get.assert_called_once_with("https://example.org")
 
-    def test__get_project_url_finds_github_urls(self, pypi_real_project_urls):
+    def test__get_project_url_finds_github_urls(
+        self, pypi_real_project_urls: dict[str, URLTypes]
+    ) -> None:
         assert (
             PypiClient._get_project_url(pypi_real_project_urls)
             == "https://github.com/django/django/"
         )
 
     def test__get_project_raises_if_github_url_not_in_desired_keys(
-        self, pypi_real_project_urls
-    ):
+        self, pypi_real_project_urls: dict[str, URLTypes]
+    ) -> None:
         pypi_real_project_urls.pop("Source")
 
         with pytest.raises(Exception) as excinfo:
@@ -212,8 +234,13 @@ class TestPypiClient:
     @patch.object(PypiClient, "_call")
     @patch.object(GithubClient, "get_licenses")
     def test_fetch_dependency_data_returns_expected_versioned_dependency(
-        self, mock_github_licenses, mock_call, pypi_response, license_, version
-    ):
+        self,
+        mock_github_licenses: MagicMock,
+        mock_call: MagicMock,
+        pypi_response: PypiResponseType,
+        license_: License,
+        version: str,
+    ) -> None:
         pypi_response["info"]["version"] = version
         pypi_response["info"]["summary"] = "Very cool project"
         pypi_response["info"]["license"] = "MIT"

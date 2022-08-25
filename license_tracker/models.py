@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
-from typing import Optional, Union
+from typing import Optional
 
-from httpx import URL
 from httpx._types import URLTypes
 
 
@@ -30,11 +29,11 @@ class Dependency:
         try:
             name, version = value.strip().split("==")
         except ValueError:
-            # keep it simple, if versions is not pinned, then let's assume it's not specified
+            # keep it simple, if version is not pinned, then let's assume it's not specified
             name, version = value.strip(), None
         return name.strip(), version.strip() if version else None
 
-    def as_dict(self) -> dict[str, Union[str, URL]]:
+    def as_dict(self) -> dict[str, URLTypes]:
         result = {
             "Name": self.name,
             "Version": self.version,

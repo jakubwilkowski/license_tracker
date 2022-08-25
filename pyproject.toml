@@ -35,7 +35,7 @@ line_length = 88
 
 [tool.pytest.ini_options]
 minversion = "7.1.2"
-addopts = "--cov-report html --cov-report term --cov=license_tracker --cov-fail-under=80"
+addopts = "--cov-report html --cov-report term --cov=license_tracker --cov-fail-under=80 --mypy"
 testpaths = [
     "tests/unit",
 ]

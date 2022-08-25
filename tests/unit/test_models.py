@@ -1,10 +1,12 @@
+from typing import Optional, Tuple
+
 import pytest
 
 from license_tracker.models import Dependency
 
 
 class TestDependency:
-    def test_dependecy_str(self):
+    def test_dependecy_str(self) -> None:
         dep = Dependency(
             "dep_name",
             "1.2.3",
@@ -25,10 +27,12 @@ class TestDependency:
             ("packaging", ("packaging", None)),
         ),
     )
-    def test_parse_string_splits_name_and_version(self, value, expected_result):
+    def test_parse_string_splits_name_and_version(
+        self, value: str, expected_result: Tuple[str, Optional[str]]
+    ) -> None:
         assert expected_result == Dependency.parse_string(value)
 
-    def test_as_dict_returns_right_keys(self, dependency):
+    def test_as_dict_returns_right_keys(self, dependency: Dependency) -> None:
         assert "Name" in dependency.as_dict()
         assert "Version" in dependency.as_dict()
         assert "Summary" in dependency.as_dict()

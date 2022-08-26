@@ -1,6 +1,6 @@
 # License Tracker
 
-Simple utility to fetch and export data about popular python packages.
+Utility to fetch and export data about popular python packages.
 
 ## Basic usage
 
@@ -9,8 +9,11 @@ The easiest way to use this tool is:
 # build image
 docker build . -t license_tracker
 
-# run the tool by providing packages without version or pinned to versions
-docker run license_tracker coreapi pytest pyflakes==2.5.0 requests
+# make wrapper executable
+chmod 700 runner.sh
+
+# run the tool by providing packages without version or pinned to particular version
+./runner.sh coreapi pytest pyflakes==2.5.0 requests
 coreapi (2.3.3) ❗ No licenses found
 pytest (7.1.2) ✔
 pyflakes (2.5.0) ✔
@@ -28,6 +31,8 @@ Processing... ━━━━━━━━━━━━━━━━━━━━━━
 ...
 ```
 
+Downloaded data can be found in `./output` directory.
+
 ## Advanced usage
 
 ### Accessing docker container
@@ -40,7 +45,7 @@ docker run -it --entrypoint /bin/bash license_tracker
 
 ### Setting up locally
 
-`Poetry` is used for dependency management to it needs to be installed in order to run this project
+`Poetry` is used for dependency management so it needs to be installed in order to run this project
 
 ```shell
 pip install poetry==1.1.14

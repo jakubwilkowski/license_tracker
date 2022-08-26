@@ -21,8 +21,10 @@ def check(
         dependency = analyzer()
         if dependency:
             processed_items.append(dependency)
+
+    exporters.FileExporter().single(processed_items)
     if show:
-        exporters.AsTable.export_single(processed_items)
+        exporters.ConsoleExporter().single(processed_items)
 
 
 if __name__ == "__main__":

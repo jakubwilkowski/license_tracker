@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, patch
 
+import pytest
 from rich.table import Table
 
 from license_tracker.exporters import ConsoleExporter, FileExporter, as_dict
@@ -80,11 +81,10 @@ class TestFileExporter:
     ) -> None:
         FileExporter().single([dependency])
 
-        # expect that we'll write one line per key
-        assert mock_open.return_value.__enter__.return_value.write.call_count == len(
-            as_dict(dependency).keys()
+        assert (
+            mock_open.return_value.__enter__.return_value.writelines.call_count
+            == len(as_dict(dependency).keys())
         )
-        mock_open.return_value.__enter__.return_value.writelines.assert_not_called()
 
     @patch("license_tracker.exporters.os.makedirs")
     @patch("license_tracker.exporters.open")
@@ -96,9 +96,40 @@ class TestFileExporter:
         )
         FileExporter().single([dependency])
 
-        # expect that we'll write one line per key, minus license key, which uses writelines
         assert (
-            mock_open.return_value.__enter__.return_value.write.call_count
-            == len(as_dict(dependency).keys()) - 1
+            mock_open.return_value.__enter__.return_value.writelines.call_count
+            == len(as_dict(dependency).keys())
         )
-        assert mock_open.return_value.__enter__.return_value.writelines.call_count == 1
+
+    @pytest.mark.parametrize(
+        "value, expected_results",
+        (
+            (
+                f"{'a'*25} {'b'*10}",
+                [
+                    f"{'a'*25:<30} |  \n",
+                    f"{'b'*10:<30} |  \n",
+                ],
+            ),
+            (
+                f"{'a' * 35}",
+                [
+                    f"{'a' * 29:<30} |  \n",
+                    f"{'a' * 6:<30} |  \n",
+                ],
+            ),
+            (
+                f"one two three four five six seven eight nine ten eleven twelve",
+                [
+                    f"{'one two three four five six':<30} |  \n",
+                    f"{'seven eight nine ten eleven':<30} |  \n",
+                    f"{'twelve':<30} |  \n",
+                ],
+            ),
+        ),
+    )
+    def test_format_line_splits_long_keys(
+        self, value: str, expected_results: list[str]
+    ) -> None:
+        actual = FileExporter()._format_line(value, " ")
+        assert actual == expected_results

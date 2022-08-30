@@ -31,14 +31,3 @@ class TestDependency:
         self, value: str, expected_result: Tuple[str, Optional[str]]
     ) -> None:
         assert expected_result == Dependency.parse_string(value)
-
-    def test_as_dict_returns_right_keys(self, dependency: Dependency) -> None:
-        assert "Name" in dependency.as_dict()
-        assert "Version" in dependency.as_dict()
-        assert "Summary" in dependency.as_dict()
-        assert "Project URL" in dependency.as_dict()
-        assert "License Name" in dependency.as_dict()
-        assert "License filename (1)" in dependency.as_dict()
-        assert "License download URLs (1)" in dependency.as_dict()
-        assert "License raw contents (1)" in dependency.as_dict()
-        assert "License sha (1)" in dependency.as_dict()

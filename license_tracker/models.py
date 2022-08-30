@@ -32,22 +32,3 @@ class Dependency:
             # keep it simple, if version is not pinned, then let's assume it's not specified
             name, version = value.strip(), None
         return name.strip(), version.strip() if version else None
-
-    def as_dict(self) -> dict[str, URLTypes]:
-        result = {
-            "Name": self.name,
-            "Version": self.version,
-            "Summary": self.summary,
-            "Project URL": self.project_url,
-            "License Name": self.license_name,
-        }
-        for idx, license_ in enumerate(self.licenses, start=1):
-            result.update(
-                {
-                    f"License filename ({idx})": license_.filename,
-                    f"License download URLs ({idx})": license_.url,
-                    f"License raw contents ({idx})": license_.raw_content,
-                    f"License sha ({idx})": license_.sha,
-                }
-            )
-        return result

@@ -1,3 +1,5 @@
+import json
+
 import typer
 from rich.progress import track
 
@@ -14,6 +16,9 @@ def check(
     """
     Check licenses of one or more packages
     """
+
+    with open("./config.json", "r") as f:
+        config = json.load(f)
     processed_items = []
     for item in track(dependencies, description="Processing..."):
         name, version = models.Dependency.parse_string(item)
@@ -22,9 +27,13 @@ def check(
         if dependency:
             processed_items.append(dependency)
 
-    exporters.FileExporter().single(processed_items)
+    exporters.FileExporter().single(
+        processed_items, extra_rows=config.get("extra_rows", [])
+    )
     if show:
-        exporters.ConsoleExporter().single(processed_items)
+        exporters.ConsoleExporter().single(
+            processed_items, extra_rows=config.get("extra_rows", [])
+        )
 
 
 if __name__ == "__main__":

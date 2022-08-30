@@ -2,8 +2,31 @@ from unittest.mock import MagicMock, patch
 
 from rich.table import Table
 
-from license_tracker.exporters import ConsoleExporter, FileExporter
+from license_tracker.exporters import ConsoleExporter, FileExporter, as_dict
 from license_tracker.models import Dependency
+
+
+class TestAsDict:
+    def test_as_dict_returns_right_default_keys(self, dependency: Dependency) -> None:
+        target_representation = as_dict(dependency)
+        assert "Name" in target_representation
+        assert "Version" in target_representation
+        assert "Summary" in target_representation
+        assert "Project URL" in target_representation
+        assert "License Name" in target_representation
+        assert "License filename (1)" in target_representation
+        assert "License download URLs (1)" in target_representation
+        assert "License raw contents (1)" in target_representation
+        assert "License sha (1)" in target_representation
+
+    def test_as_dict_returns_empty_strings_for_extra_rows(
+        self, dependency: Dependency
+    ) -> None:
+        extra_rows = ["Lorem", "Ipsum", "dolor"]
+        target_representation = as_dict(dependency, extra_rows=extra_rows)
+        for extra_row in extra_rows:
+            assert extra_row in target_representation
+            assert target_representation[extra_row] == ""
 
 
 class TestConsoleExporter:
@@ -31,7 +54,7 @@ class TestConsoleExporter:
         assert table.columns[0].header == "Key"
         assert table.columns[1].header == "Value"
         # expect that we'll add one row per key
-        assert len(table.rows) == len(dependency.as_dict().keys())
+        assert len(table.rows) == len(as_dict(dependency).keys())
 
 
 class TestFileExporter:
@@ -59,7 +82,7 @@ class TestFileExporter:
 
         # expect that we'll write one line per key
         assert mock_open.return_value.__enter__.return_value.write.call_count == len(
-            dependency.as_dict().keys()
+            as_dict(dependency).keys()
         )
         mock_open.return_value.__enter__.return_value.writelines.assert_not_called()
 
@@ -76,6 +99,6 @@ class TestFileExporter:
         # expect that we'll write one line per key, minus license key, which uses writelines
         assert (
             mock_open.return_value.__enter__.return_value.write.call_count
-            == len(dependency.as_dict().keys()) - 1
+            == len(as_dict(dependency).keys()) - 1
         )
         assert mock_open.return_value.__enter__.return_value.writelines.call_count == 1

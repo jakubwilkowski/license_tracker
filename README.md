@@ -2,6 +2,12 @@
 
 Utility to fetch and export data about popular python packages.
 
+## Configuration
+
+All configuration can be found in config.json:
+ * `extra_rows` - list of strings that will be added to output of each
+ dependency to be filled manually
+
 ## Basic usage
 
 The easiest way to use this tool is:

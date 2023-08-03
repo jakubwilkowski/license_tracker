@@ -12,7 +12,7 @@ for path in sorted(Path(f"license_tracker").rglob("*.py")):
     print(f"found path {path}")
     module_path = path.relative_to(".").with_suffix("")
     parts = list(module_path.parts)
-    full_doc_path = Path("license_tracker", "/".join(parts[:])).with_suffix(".md")
+    full_doc_path = Path("license_tracker/ref", "/".join(parts[:])).with_suffix(".md")
 
     if parts[-1] == "__init__":
         continue
